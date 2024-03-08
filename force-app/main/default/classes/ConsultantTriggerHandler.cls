@@ -23,28 +23,20 @@ public with sharing class ConsultantTriggerHandler {
             
         ///////////이하 판매점 관련/////////////
             
-        Map<String, Integer> storeNameToConsultantCount = new Map<String, Integer>();
-        for (AggregateResult aggregate : [SELECT StoreName__c, COUNT(Id) cnt
-                                           FROM Consultant__c 
-                                           WHERE StoreName__c IN :storeNames
-                                           GROUP BY StoreName__c]) {
-            storeNameToConsultantCount.put((String)aggregate.get('StoreName__c'), (Integer)aggregate.get('cnt'));
-        }
-        
         for (String storeName : storeNames) {
-            Integer accountConsultantCount = storeNameToConsultantCount.containsKey(storeName) ? storeNameToConsultantCount.get(storeName) : 0;
-        
-            accountsToUpdate.add(new Account(Name = storeName, 
-                                             Total_Consultation_Count__c = accountConsultantCount));
-        }
+                Integer accountConsultantCount = [SELECT COUNT() 
+                                                  FROM Consultant__c 
+                                                  WHERE Account__c = :storeName];
+                accountsToUpdate.add(new Account(Id = storeName, 
+                Total_Consultation_Count__c = accountConsultantCount));
+            } 
             
-
-
-        
-        if (!contactsToUpdate.isEmpty()) {
-            update contactsToUpdate;
-        }
+        // if (contactsToUpdate ) {
             
+        // }
+        // 이름 없는경우 수정 ===> if문 주석처리
+        
+        update contactsToUpdate;
         if (!accountsToUpdate.isEmpty()) {
             update accountsToUpdate;
         }

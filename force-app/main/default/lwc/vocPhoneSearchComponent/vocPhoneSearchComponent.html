@@ -1,0 +1,18 @@
+<template>
+    <div class="slds-form-element">
+        <label class="slds-form-element__label" for="text-input-id-47">Search Contacts by Phone Number</label>
+        <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_left">
+            <svg class="slds-icon slds-input__icon slds-input__icon_left slds-icon-text-default" aria-hidden="true">
+                <use xlink:href="/assets/icons/utility-sprite/svg/symbols.svg#search"></use>
+            </svg>
+            <input type="tel" id="text-input-id-47" placeholder="Search contacts by phone number..." class="slds-input" onchange={handleSearchPhoneNumberChange} />
+        </div>
+    </div>
+    <template if:true={contacts}>
+        <ul class="slds-listbox slds-listbox_vertical">
+            <template for:each={contacts} for:item="contact">
+                <li key={contact.Id} class="slds-listbox__item">{contact.Name}</li>
+            </template>
+        </ul>
+    </template>
+</template>

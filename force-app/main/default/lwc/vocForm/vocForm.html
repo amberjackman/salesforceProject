@@ -1,0 +1,26 @@
+<template>
+    <lightning-card title="전화번호로 고객을 검색하세요." icon-name="standard:contact">      
+        <div class="slds-card__body slds-card__body_inner">
+            <lightning-input type="search" label="고객 핸드폰 번호를 입력하세요" value={phoneNumberPattern} onchange={handlePhoneChange}  class="slds-var-m-bottom_small"></lightning-input>
+            <lightning-button label="검색" onclick={searchCustomers}></lightning-button>
+            <template if:true={error}>
+                <div class="slds-text-color_error slds-text-body_small slds-var-m-top_x-small">{error}</div>
+            </template>
+            <template if:true={searchResults}>
+                <div class="slds-var-m-top_medium">
+                    <lightning-datatable
+                        key-field="Id"
+                        data={searchResults}
+                        columns={columns}
+                        onrowaction={handleRowAction}
+                        hide-checkbox-column
+                        >
+                    </lightning-datatable>
+                    <div class="slds-var-m-top_small">
+                        <lightning-button label="닫기" onclick={closeResults}></lightning-button>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

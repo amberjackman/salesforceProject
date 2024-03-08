@@ -1,0 +1,30 @@
+{
+  "plugins": ["prettier-plugin-apex"],
+  "trailingComma": "none",
+  "singleQuote": false,
+  "semi": true,
+  "printWidth": 85,
+  "tabWidth": 2,
+  "quoteProps": "preserve",
+  "overrides": [
+    {
+      "files": "*.test.js",
+      "options": {
+        "semi": true
+      }
+    },
+
+    {
+      "files": "**/lwc/**/*.html",
+      "options": {
+        "parser": "lwc"
+      }
+    },
+    {
+      "files": ["*.{cmp,page,component}"],
+      "options": {
+        "parser": "html"
+      }
+    }
+  ]
+}

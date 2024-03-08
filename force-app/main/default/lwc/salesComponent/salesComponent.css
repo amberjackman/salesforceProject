@@ -1,0 +1,48 @@
+.add-contact-product-form {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  border: 2px solid orange;
+  border-radius: 5px;
+  width: 300px;
+  background-color: white;
+}
+
+.slds-card {
+  border: none;
+}
+
+.slds-align_absolute-center lightning-button {
+  width: 10rem;
+  height: 2rem;
+}
+
+.scroll-container {
+  /* width: 100%;
+  max-width: 100%; */
+  margin-left: 40px;
+}
+
+.add-contact-product-form lightning-button,
+.add-contact-product-form lightning-input,
+.add-contact-product-form lightning-combobox {
+  margin-bottom: 10px;
+}
+
+.laptop-product-row,
+.general-devices-product-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.laptop-product-row lightning-combobox,
+.general-devices-product-row lightning-combobox {
+  flex: 1;
+  margin-right: 10px;
+}
+
+.laptop-product-row lightning-input,
+.general-devices-product-row lightning-input {
+  width: 45px;
+}
