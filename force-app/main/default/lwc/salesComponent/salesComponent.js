@@ -23,8 +23,10 @@ export default class SalesComponent extends LightningElement {
   @track discount = 0;
   @track products = [];
   @track rowIndex = "";
+  @track lapTopRowId = "";
+  @track generalDeviceRowId = "";
   @track productRecordId = "";
-  @track containerStyle = "";
+  @track isloading = false;
 
   @track totalPrice = {
     originalTotalPrice: 0,
@@ -39,57 +41,116 @@ export default class SalesComponent extends LightningElement {
   @track laptopRows = [
     {
       id: 0,
-      quantity: 0
+      isCharged: false
     }
   ];
 
   @track generalDeviceRows = [
     {
       id: 0,
-      quantity: 0
+      isCharged: false
     }
   ];
 
-  // 페이지 로드 시 contactId 값에 값을 recordId 할당
+  // 페이지 로드 시 contactId 값에 값을 recordId 할당.
   connectedCallback() {
+    this.orderDateTime = new Date().toISOString();
     this.contactId = this.recordId;
     this.generalDeviceRows = [];
     this.laptopRows = [];
-    window.addEventListener("scroll", this.handleScroll.bind(this));
-  }
 
-  disconnectedCallback() {
-    window.removeEventListener("scroll", this.handleScroll.bind(this));
-  }
+    // const existingLaptopRow = this.laptopRows[0];
+    // if (existingLaptopRow) {
+    //     existingLaptopRow.id = this.generateId();
+    //     this.currentLaptopRowId = existingLaptopRow.id;
+    // }
 
-  handleScroll() {
-    const scrollY = window.scrollY;
-    const container = this.template.querySelector(".scroll-container");
-    if (container) {
-      const isFixed = scrollY > 0.5 * window.innerHeight;
-      this.containerStyle = isFixed
-        ? `position: fixed; top: 175px; width:19%; height: 75%; overflow-y: auto;`
-        : "";
-    }
+    // // 주변기기 로우에 ID 부여
+    // const existingGeneralDeviceRow = this.generalDeviceRows[0];
+    // if (existingGeneralDeviceRow) {
+    //     existingGeneralDeviceRow.id = this.generateId();
+    //     this.currentGeneralDeviceRowId = existingGeneralDeviceRow.id;
+    // }
   }
 
   addNewLaptopRow(index) {
-    const newRowId = this.generateId();
-    this.laptopRows.push({ id: newRowId });
-    this.updateProduct("laptop", "", 0);
+    if (
+      this.products.length > 0 &&
+      this.products[this.products.length - 1].type !== null &&
+      this.products[this.products.length - 1].quantity === 0
+    ) {
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "수량 없음",
+          message: "수량을 입력하세요",
+          variant: "warning"
+        })
+      );
+    } else if (
+      this.laptopRows.length !== 0 &&
+      this.laptopRows[this.laptopRows.length - 1].isCharged === false
+    ) {
+      console.log("laptoprows", JSON.parse(JSON.stringify(this.laptopRows)));
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "모델 선택",
+          message: "노트북 모델이 선택되지 않았습니다",
+          variant: "warning"
+        })
+      );
+      console.log("노트북 물품이 추가되지 않았습니다");
+
+      return;
+    } else {
+      const newRowId = this.generateId();
+      this.lapTopRowId = newRowId;
+      this.laptopRows.push({ id: newRowId, isCharged: false });
+      console.log("laptoprows", JSON.parse(JSON.stringify(this.laptopRows)));
+    }
+    // this.updateProduct("laptop", "temp", 1, this.lapTopRowId);
   }
 
   addNewGeneralDeviceRow(index) {
-    const newRowId = this.generateId();
-    this.generalDeviceRows.push({ id: newRowId });
-    this.updateProduct("generalDevice", "", 0);
+    if (
+      this.products.length > 0 &&
+      this.products[this.products.length - 1].type !== null &&
+      this.products[this.products.length - 1].quantity === 0
+    )
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "수량 입력",
+          message: "수량을 입력하세요",
+          variant: "warning"
+        })
+      );
+    else if (
+      this.generalDeviceRows.length !== 0 &&
+      this.generalDeviceRows[this.generalDeviceRows.length - 1].isCharged === false
+    ) {
+      console.log("laptoprows", JSON.parse(JSON.stringify(this.generalDeviceRows)));
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "모델 없음",
+          message: "주변기기 모델이 선택되지 않았습니다",
+          variant: "warning"
+        })
+      );
+
+      return;
+    } else {
+      const newRowId = this.generateId();
+      this.generalDeviceRowId = newRowId;
+      this.generalDeviceRows.push({ id: newRowId, isCharged: false });
+      // this.updateProduct("generalDevice", "temp", 1, this.generalDeviceRowId);
+    }
   }
 
-  //행 삭제와 함께 추가된 물품 삭제
+  ////행 삭제와 함께 추가된 물품 삭제
   removeLatestProductByType(type) {
     console.log("Before removal:", JSON.parse(JSON.stringify(this.products)));
 
     // 해당 타입의 제품들 중에서 제일 마지막에 있는 값을 찾아서 삭제
+
     const indexToRemove = this.products.reduceRight(
       (latestIndex, current, currentIndex, array) => {
         if (current.type === type && currentIndex > latestIndex) {
@@ -110,40 +171,40 @@ export default class SalesComponent extends LightningElement {
   }
 
   deleteLastLaptopRow() {
-    if (this.laptopRows.length > -1) {
-      const lastRowId = this.laptopRows.pop().id;
-      this.laptop = "";
-      this.laptopQuantity = 0;
-      this.removeLatestProductByType("laptop");
-      console.log(this.laptopRows);
-      this.calculateTotalPrice();
-    } else {
-      this.dispatchEvent(
-        new ShowToastEvent({
-          title: "warning",
-          message: "1줄은 있어야 합니다",
-          variant: "warning"
-        })
-      );
+    if (this.laptopRows.length > 0) {
+      const lastLaptopRow = this.laptopRows[this.laptopRows.length - 1];
+      if (lastLaptopRow) {
+        if (lastLaptopRow.isCharged === false) {
+          console.log("laptop is uncharged");
+          this.laptopRows.pop();
+        } else if (lastLaptopRow.isCharged === true) {
+          console.log("laptop remove");
+          this.removeLatestProductByType("laptop");
+          this.laptopRows.pop();
+        }
+        console.log(this.laptopRows);
+        this.calculateTotalPrice();
+      }
     }
   }
 
   deleteLastGeneralDeviceRow() {
-    if (this.generalDeviceRows.length > -1) {
-      const lastRowId = this.generalDeviceRows.pop().id;
-      this.generalDevice = "";
-      this.generalDeviceQuantity = 0;
-      this.removeLatestProductByType("generalDevice");
-      console.log(this.generalDeviceRows);
-      this.calculateTotalPrice();
-    } else {
-      this.dispatchEvent(
-        new ShowToastEvent({
-          title: "warning",
-          message: "1줄은 있어야 합니다",
-          variant: "warning"
-        })
-      );
+    if (this.generalDeviceRows.length > 0) {
+      const lastGeneralDeviceRow =
+        this.generalDeviceRows[this.generalDeviceRows.length - 1];
+      console.log("l.g.d.r", JSON.parse(JSON.stringify(lastGeneralDeviceRow)));
+      if (lastGeneralDeviceRow) {
+        if (lastGeneralDeviceRow.isCharged === false) {
+          console.log("device is uncharged");
+          this.generalDeviceRows.pop();
+        } else if (lastGeneralDeviceRow.isCharged === true) {
+          console.log("device remove");
+          this.removeLatestProductByType("generalDevice");
+          this.generalDeviceRows.pop();
+        }
+        console.log(this.generalDeviceRows);
+        this.calculateTotalPrice();
+      }
     }
   }
 
@@ -192,13 +253,13 @@ export default class SalesComponent extends LightningElement {
     }
   }
 
-  // 노트북 로우의 제품 가격을 찾는 메소드
+  // 노트북 로우의 제품 가격을 찾는 함수
   getLaptopRowPrice(productId) {
     const filteredLaptop = this.laptops.find((item) => item.value === productId);
     return filteredLaptop ? filteredLaptop.price : 0;
   }
 
-  // 주변기기 로우의 제품 가격을 찾는 메소드
+  // 주변기기 로우의 제품 가격을 찾는 함수
   getGeneralDeviceRowPrice(productId) {
     const filteredGeneralDevice = this.generalDevices.find(
       (item) => item.value === productId
@@ -206,9 +267,15 @@ export default class SalesComponent extends LightningElement {
     return filteredGeneralDevice ? filteredGeneralDevice.price : 0;
   }
 
-  // totalPrice 계산 메소드
+  // handleWheel(event) {
+  //   if (this.isLoading) {
+  //     event.preventDefault();
+  //     event.preventDefault();
+  //   }
+  // } line 207 - 212 마우스 휠 막는 함수
+
+  // totalPrice 계산 메서드
   calculateTotalPrice() {
-    // 각 값이 존재하는지 확인
     if (
       this.laptops &&
       this.generalDevices &&
@@ -250,12 +317,14 @@ export default class SalesComponent extends LightningElement {
       const discount = this.discount || 0;
       const discountAmount = originalTotalPrice * (discount / 100);
       const discountedPrice = originalTotalPrice - discountAmount;
+
       const formattedOriginalTotalPrice = originalTotalPrice.toLocaleString();
       const formattedDiscountAmount = discountAmount.toLocaleString();
       const formattedDiscountedPrice = discountedPrice.toLocaleString();
       const formattedLaptopTotalPrice = laptopTotalPrice.toLocaleString();
       const formattedGeneralDeviceTotalPrice =
         generalDeviceTotalPrice.toLocaleString();
+
       this.totalPrice = {
         formattedOriginalTotalPrice,
         formattedGeneralDeviceTotalPrice,
@@ -270,93 +339,139 @@ export default class SalesComponent extends LightningElement {
     return this.calculateTotalPrice();
   }
 
-  // 물품을 추가하거나 기존 물품의 정보를 변경하는 메소드
-  updateProduct(type, productId, quantity) {
-    // 새로운 제품 추가
-    if (productId && quantity) {
+  // 새로운 제품 추가
+  updateProduct(type, productId, quantity, rowIndex) {
+    if (productId || quantity || rowIndex) {
+      const existingProductIndex = this.products.findIndex(
+        (product) => product.productId === productId
+      );
+
       const newProduct = {
         type: type,
         productId: productId,
-        quantity: quantity
+        quantity: quantity,
+        rowIndex: rowIndex
       };
 
-      // 중복된 productId를 가진 존재하는 배열 찾기
-      const oldProducts = this.products.filter(
-        (item) => item.productId === productId
+      // 중복된 rowIndex를 가진 오래된 배열 찾기
+      const oldProductsIndex = this.products.findIndex(
+        (item) => item.rowIndex === rowIndex
       );
 
-      // 이전 값이 존재하면 해당 배열에서 제거
-      if (oldProducts.length > 0) {
-        const updatedProducts = oldProducts.map((product) => {
-          if (product.productId === productId && product.type === type) {
-            return {
-              ...product,
-              productId: productId,
-              quantity: quantity
-            };
-          }
-          return product;
-        });
+      // 이전 값이 존재하면 해당 배열에서 변경
+      if (oldProductsIndex !== -1) {
+        const updatedProducts = [...this.products];
+        updatedProducts[oldProductsIndex] = {
+          ...updatedProducts[oldProductsIndex],
+          productId: productId,
+          quantity: quantity
+        };
 
-        // 기존 배열에서 수정된 항목을 제외하고 새 제품 추가
-        this.products = this.products
-          .filter((item) => item.productId !== productId)
-          .concat(updatedProducts);
+        this.products = updatedProducts;
       } else {
+        if (type === "laptop" && this.laptopRows.length !== 0) {
+          this.laptopRows[this.laptopRows.length - 1].isCharged = true;
+        }
+        if (type === "generalDevice" && this.generalDeviceRows.length !== 0) {
+          this.generalDeviceRows[this.generalDeviceRows.length - 1].isCharged = true;
+        }
         this.products.push(newProduct);
       }
+      if (productId !== "") {
+        if (quantity === 0 && oldProductsIndex === -1) {
+          if (existingProductIndex !== -1) {
+            this.dispatchEvent(
+              new ShowToastEvent({
+                title: "중복 모델",
+                message: "이미 선택된 모델입니다. 다시 선택해주세요",
+                variant: "error"
+              })
+            );
+          }
+          return;
+        }
+      }
+      // this.products.push(newProduct);
     }
 
-    console.log(JSON.parse(JSON.stringify(this.products)));
+    console.log("products", JSON.parse(JSON.stringify(this.products)));
     this.calculateTotalPrice();
   }
 
   // 선택한 판매점의 값을 가져옴
-  handleAccountSelection(event, rowid) {
+  handleAccountSelection(event) {
     this.account = event.detail.value;
   }
 
   // 선택한 노트북 값 가져옴
-  handleLaptopSelection(event, rowid) {
+  handleLaptopSelection(event) {
     const newLaptop = event.detail.value;
+    const rowId = event.target.dataset.rowid;
+    const rowIndex = event.target.dataset.rowindex;
+    console.log(JSON.parse(JSON.stringify(rowId)));
     this.laptop = newLaptop;
-    // this.updateProduct('laptop', newLaptop, this.laptopQuantity);
+    this.lapTopRowId = rowId;
+    this.laptopRows.isCharged = true;
+    this.updateProduct("laptop", newLaptop, 0, rowId);
+    console.log("products", JSON.parse(JSON.stringify(this.products)));
   }
 
   // 선택한 노트북 수량 값을 가져옴
   handleLaptopQuantityCountChange(event) {
+    const rowId = event.target.dataset.rowid;
+    console.log(JSON.parse(JSON.stringify(rowId)));
     this.laptopQuantity = isNaN(parseInt(event.target.value, 10))
       ? 0
       : parseInt(event.target.value, 10);
-    this.updateProduct("laptop", this.laptop, this.laptopQuantity);
+
+    if (this.laptop === "" && parseInt(event.target.value, 10) > 0) {
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "모델 없음",
+          message: "물품을 선택해주세요",
+          variant: "error"
+        })
+      );
+      event.target.value = 0;
+      return;
+    }
+    this.updateProduct("laptop", this.laptop, this.laptopQuantity, rowId);
+    console.log("products", JSON.parse(JSON.stringify(this.products)));
   }
 
   // 선택한 주변기기 제품 값을 가져옴
   handleGeneralDeviceSelection(event) {
     const newGeneralDevice = event.detail.value;
+    const rowId = event.target.dataset.rowid;
+    const rowIndex = event.target.dataset.rowindex;
+    console.log(JSON.parse(JSON.stringify(rowId)));
     this.generalDevice = newGeneralDevice;
-    // this.updateProduct('generalDevice', newGeneralDevice, this.generalDeviceQuantity);
+    this.generalDeviceRowId = rowId;
+    this.generalDeviceRows.isCharged = true;
+    this.updateProduct("generalDevice", newGeneralDevice, 0, rowId);
   }
 
   // 선택한 주변기기 수량 값을 가져옴
   handleGeneralDeviceQuantityCountChange(event) {
+    const rowId = event.target.dataset.rowid;
+    console.log(JSON.parse(JSON.stringify(rowId)));
     this.generalDeviceQuantity = isNaN(parseInt(event.target.value, 10))
       ? 0
       : parseInt(event.target.value, 10);
     this.updateProduct(
       "generalDevice",
       this.generalDevice,
-      this.generalDeviceQuantity
+      this.generalDeviceQuantity,
+      rowId
     );
   }
 
   // 선택한 주문 날짜 값을 가져옴
   handleOrderDateTimeSelection(event) {
     const selectedDateTimeString = event.target.value;
-    console.log(JSON.parse(JSON.stringify(event.target.value)));
+    // console.log(JSON.parse(JSON.stringify(event.target.value)));
+    console.log(JSON.parse(JSON.stringify(selectedDateTimeString)));
     this.orderDateTime = new Date(selectedDateTimeString).toISOString();
-    console.log(JSON.parse(JSON.stringify(this.orderDateTime)));
-    // this.orderDateTime = new Date().toISOString();
   }
 
   // 선택한 할인율을 가져옴
@@ -366,19 +481,18 @@ export default class SalesComponent extends LightningElement {
     if (event.target.value > 20) {
       this.dispatchEvent(
         new ShowToastEvent({
-          title: "warning",
-          message: "할인율 20 이상 불가",
-          variant: "warning"
+          title: "할인율 제한",
+          message: "할인율은 20%를 초과할 수 없습니다",
+          variant: "error"
         })
       );
+      event.target.value = 20;
+      this.discount = parseInt(20, 10);
     }
     this.calculateTotalPrice();
   }
 
-  // 초기화하는 메소드
   afterFinished() {
-    this.dispatchEvent(new RefreshEvent());
-
     this.products = [];
     this.laptopRows = [];
     this.generalDeviceRows = [];
@@ -388,11 +502,13 @@ export default class SalesComponent extends LightningElement {
     this.account = "";
     this.accounts = [];
     this.laptop = "";
+    this.dispatchEvent(new RefreshEvent());
   }
 
   // 고객 제품 주문 생성
   addContactProducts() {
-    // 중복방지, 중복값 찾은 후 제외한 배열 생성
+    this.isloading = true;
+
     const uniqueProducts = this.products.reduce((acc, current) => {
       const isDuplicate = acc.some(
         (item) => item.type === current.type && item.productId === current.productId
@@ -406,73 +522,81 @@ export default class SalesComponent extends LightningElement {
       }
     }, []);
 
-    // 주문 처리
     if (uniqueProducts.length > 0) {
-      const laptopProducts = uniqueProducts.filter(
-        (product) => product.type === "laptop"
-      );
-      const generalDeviceProducts = uniqueProducts.filter(
-        (product) => product.type === "generalDevice"
-      );
+      const sortedAndMergedProducts = uniqueProducts.sort((a, b) => {
+        //  type으로 정렬
+        const typeComparison = a.type.localeCompare(b.type);
 
-      // ProductId 별로 정렬
-      laptopProducts.sort((a, b) => a.productId.localeCompare(b.productId));
-      generalDeviceProducts.sort((a, b) => a.productId.localeCompare(b.productId));
+        // 나머지 productId로 정렬
+        if (typeComparison === 0) {
+          return a.productId.toLowerCase().localeCompare(b.productId.toLowerCase());
+        }
 
-      const sortedProducts = laptopProducts.concat(generalDeviceProducts);
+        return typeComparison;
+      });
 
-      const promises = sortedProducts.map((product) => {
-        return addContactProducts({
-          contactId: this.contactId,
-          accountId: this.account,
-          orderDateTime: this.orderDateTime,
-          discount: this.discount,
-          laptopId: product.type === "laptop" ? product.productId : "",
-          laptopQuantity: product.type === "laptop" ? 1 : 0,
-          generalDeviceId: product.type === "generalDevice" ? product.productId : "",
-          generalDeviceQuantity: product.type === "generalDevice" ? 1 : 0
-        });
+      const promises = sortedAndMergedProducts.map((product) => {
+        const isLaptop = product.type === "laptop";
+        const isGeneralDevice = product.type === "generalDevice";
+
+        return () =>
+          addContactProducts({
+            contactId: this.contactId,
+            accountId: this.account,
+            orderDateTime: this.orderDateTime,
+            discount: this.discount,
+            laptopId: isLaptop ? product.productId : "",
+            laptopQuantity: isLaptop ? 1 : 0,
+            generalDeviceId: isGeneralDevice ? product.productId : "",
+            generalDeviceQuantity: isGeneralDevice ? 1 : 0
+          });
       });
 
       // 모든 주문을 처리하는 Promise
-      Promise.all(promises)
+
+      function processPromisesSequentially(promises) {
+        return promises.reduce((chain, promise) => {
+          return chain.then(() => promise());
+        }, Promise.resolve());
+      }
+
+      processPromisesSequentially(promises)
         .then(() => {
-          this.dispatchEvent(
-            new ShowToastEvent({
-              title: "주문 완료",
-              message: "3초후 새로고침 됩니다",
-              variant: "success"
-            })
-          );
+          this.isloading = false;
+          // this.dispatchEvent(
+          //   new ShowToastEvent({
+          //     title: "주문 완료",
+          //     message: "3초후 새로고침 됩니다",
+          //     variant: "success"
+          //   })
+          // );
+
           location.reload();
-          // 3초후 새로고침
-          // setTimeout(() => {
-          //   location.reload();
-          // }, 3000);
         })
         .catch((error) => {
           // 주문 생성 중 오류가 발생한 경우
+          this.isloading = false;
           console.error("Error creating records:", error);
           this.dispatchEvent(
             new ShowToastEvent({
-              title: "Error",
-              message: error.body.message,
+              title: "네트워크 오류",
+              message: "오류가 발생했습니다",
               variant: "error"
             })
           );
+          afterFinished();
         });
     } else {
       // 주문할 제품이 없는 경우
+      this.isloading = false;
       this.dispatchEvent(
         new ShowToastEvent({
-          title: "Warning",
+          title: "모델 없음",
           message: "주문할 제품을 선택하세요.",
           variant: "warning"
         })
       );
     }
-    // 완료 후 초기화
-    // afterFinished();
   }
 }
 

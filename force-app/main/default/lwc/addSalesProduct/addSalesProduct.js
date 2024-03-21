@@ -48,7 +48,14 @@ export default class AddSalesProduct extends LightningElement {
     if (this.searchTerm) {
       addSalesProduct({ orderCode: this.searchTerm })
         .then(() => {
-          this.showToast("등록완료", "판매제품이 성공적으로 등록되었습니다", "success");
+          this.showToast(
+            "등록완료",
+            "판매제품이 성공적으로 등록되었습니다",
+            "success"
+          );
+          setTimeout(() => {
+            location.reload();
+          },1000);
         })
         .catch((error) => {
           console.error("Error creating sales product: ", error);
