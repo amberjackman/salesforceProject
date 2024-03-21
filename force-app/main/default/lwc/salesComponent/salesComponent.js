@@ -58,19 +58,6 @@ export default class SalesComponent extends LightningElement {
     this.contactId = this.recordId;
     this.generalDeviceRows = [];
     this.laptopRows = [];
-
-    // const existingLaptopRow = this.laptopRows[0];
-    // if (existingLaptopRow) {
-    //     existingLaptopRow.id = this.generateId();
-    //     this.currentLaptopRowId = existingLaptopRow.id;
-    // }
-
-    // // 주변기기 로우에 ID 부여
-    // const existingGeneralDeviceRow = this.generalDeviceRows[0];
-    // if (existingGeneralDeviceRow) {
-    //     existingGeneralDeviceRow.id = this.generateId();
-    //     this.currentGeneralDeviceRowId = existingGeneralDeviceRow.id;
-    // }
   }
 
   addNewLaptopRow(index) {
@@ -107,7 +94,6 @@ export default class SalesComponent extends LightningElement {
       this.laptopRows.push({ id: newRowId, isCharged: false });
       console.log("laptoprows", JSON.parse(JSON.stringify(this.laptopRows)));
     }
-    // this.updateProduct("laptop", "temp", 1, this.lapTopRowId);
   }
 
   addNewGeneralDeviceRow(index) {
@@ -141,7 +127,6 @@ export default class SalesComponent extends LightningElement {
       const newRowId = this.generateId();
       this.generalDeviceRowId = newRowId;
       this.generalDeviceRows.push({ id: newRowId, isCharged: false });
-      // this.updateProduct("generalDevice", "temp", 1, this.generalDeviceRowId);
     }
   }
 
@@ -391,7 +376,6 @@ export default class SalesComponent extends LightningElement {
           return;
         }
       }
-      // this.products.push(newProduct);
     }
 
     console.log("products", JSON.parse(JSON.stringify(this.products)));
@@ -599,50 +583,3 @@ export default class SalesComponent extends LightningElement {
     }
   }
 }
-
-//    // 노트북 정보 추가
-//    this.laptop.forEach(row => {
-//     if (row.laptop && row.laptopQuantity) {
-//         products.push({
-//             type: 'laptop',
-//             productId: row.laptop,
-//             quantity: row.laptopQuantity,
-//         });
-//     }
-//     console.log(products[0])
-
-// });
-
-// // 주변기기 정보 추가
-// this.generalDevice.forEach(row => {
-//     if (row.generalDevice && row.generalDeviceQuantity) {
-//         products.push({
-//             type: 'device',
-//             productId: row.generalDevice,
-//             quantity: row.generalDeviceQuantity,
-//         });
-//     }
-//     console.log(products[0])
-// });
-
-//   addRow(event) {
-//     const key = event.target.accessKey;
-//     const index = event.target.id;
-//     if (key === 'laptop') {
-//         this.addNewLaptopRow(index);
-//     } else if (key === 'generalDevice') {
-//         this.addNewGeneralDeviceRow(index);
-//     }
-// }
-
-// addToProducts(type, productId, quantity) {
-//     const existingProductIndex = this.products.findIndex(item => item.type === type && item.productId === productId);
-
-//     if (existingProductIndex === -1 && productId) {
-//         this.products = [...this.products, {
-//             type: type,
-//             productId: productId,
-//             quantity: quantity
-//         }];
-//     }
-// }
